@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Ads Budget Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0077b5 0%, #004471 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0077b5, #00a0dc);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) translateY(-50%) scale(1); }
+            50% { transform: translateX(-50%) translateY(-50%) scale(1.1); }
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 0;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 40px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .results-section {
+            padding: 40px;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+        }
+
+        .form-group {
+            margin-bottom: 28px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 1em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #0077b5;
+            box-shadow: 0 0 0 4px rgba(0, 119, 181, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .budget-input {
+            position: relative;
+        }
+
+        .budget-input::before {
+            content: '$';
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            font-weight: 600;
+            color: #0077b5;
+            z-index: 2;
+        }
+
+        .budget-input input {
+            padding-left: 40px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #0077b5;
+        }
+
+        .campaign-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .tab-option {
+            position: relative;
+        }
+
+        .tab-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .tab-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            padding: 15px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-align: center;
+            min-height: 60px;
+            margin-bottom: 0;
+        }
+
+        .tab-option label:hover {
+            border-color: #0077b5;
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+
+        .tab-option input[type="radio"]:checked + label {
+            border-color: #0077b5;
+            background: linear-gradient(135deg, #0077b5, #00a0dc);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 119, 181, 0.3);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f1f3f4;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0077b5, #00a0dc, #28a745);
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .result-card h3 {
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 8px;
+            color: #212529;
+        }
+
+        .result-subtitle {
+            font-size: 0.95em;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .result-detail {
+            font-size: 0.85em;
+            color: #495057;
+            line-height: 1.5;
+            padding-top: 15px;
+            border-top: 1px solid #f1f3f4;
+        }
+
+        .pipeline-section {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 35px;
+            border-radius: 18px;
+            margin-top: 25px;
+            box-shadow: 0 15px 40px rgba(40, 167, 69, 0.25);
+        }
+
+        .pipeline-section h3 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .pipeline-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .pipeline-metric {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .pipeline-metric .metric-value {
+            font-size: 2em;
+            font-weight: 300;
+            margin-bottom: 5px;
+        }
+
+        .pipeline-metric .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .comparison-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 25px;
+            border: 1px solid #e9ecef;
+        }
+
+        .comparison-section h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .roas-comparison {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+
+        .roas-item {
+            padding: 15px;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #e9ecef;
+        }
+
+        .roas-item.linkedin {
+            border-color: #0077b5;
+            background: linear-gradient(135deg, #0077b5, #00a0dc);
+            color: white;
+        }
+
+        .roas-item.google {
+            border-color: #4285f4;
+            color: #4285f4;
+        }
+
+        .roas-item.meta {
+            border-color: #1877f2;
+            color: #1877f2;
+        }
+
+        .journey-info {
+            background: #e3f2fd;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid #0077b5;
+        }
+
+        .journey-info h4 {
+            color: #0077b5;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .journey-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .journey-stat {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .journey-stat .stat-number {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #0077b5;
+        }
+
+        .journey-stat .stat-label {
+            font-size: 0.85em;
+            color: #495057;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .input-section, .results-section {
+                padding: 30px 20px;
+            }
+            
+            .campaign-tabs {
+                grid-template-columns: 1fr;
+            }
+            
+            .roas-comparison {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LinkedIn Budget Analyzer</h1>
+            <p>Enter your budget and see what results you can expect</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2 style="margin-bottom: 30px; color: #495057;">Your Campaign Setup</h2>
+                
+                <div class="form-group">
+                    <label for="totalBudget">Total Campaign Budget</label>
+                    <div class="budget-input">
+                        <input type="number" id="totalBudget" value="5000" min="100" step="100">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="campaignDuration">Campaign Duration (days)</label>
+                    <input type="number" id="campaignDuration" value="30" min="1" max="365">
+                </div>
+
+                <div class="form-group">
+                    <label>Campaign Objective</label>
+                    <div class="campaign-tabs">
+                        <div class="tab-option">
+                            <input type="radio" name="campaignType" value="awareness" id="awareness">
+                            <label for="awareness">Brand Awareness</label>
+                        </div>
+                        <div class="tab-option">
+                            <input type="radio" name="campaignType" value="leads" id="leads" checked>
+                            <label for="leads">Lead Generation</label>
+                        </div>
+                        <div class="tab-option">
+                            <input type="radio" name="campaignType" value="website" id="website">
+                            <label for="website">Website Traffic</label>
+                        </div>
+                        <div class="tab-option">
+                            <input type="radio" name="campaignType" value="engagement" id="engagement">
+                            <label for="engagement">Engagement</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="targetAudience">Target Audience Size</label>
+                    <select id="targetAudience">
+                        <option value="small">Small (10K - 100K)</option>
+                        <option value="medium" selected>Medium (100K - 500K)</option>
+                        <option value="large">Large (500K - 1M+)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="industry">Industry</label>
+                    <select id="industry">
+                        <option value="technology" selected>Technology</option>
+                        <option value="finance">Financial Services</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="education">Education</option>
+                        <option value="consulting">Consulting</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="journey-info">
+                    <h4>2025 B2B Customer Journey</h4>
+                    <p style="color: #495057; font-size: 0.9em; line-height: 1.5;">
+                        The typical B2B customer journey spans 211 days with 6.8 stakeholders across 3.7 channels, requiring 76 total touches.
+                    </p>
+                    <div class="journey-stats">
+                        <div class="journey-stat">
+                            <div class="stat-number">211</div>
+                            <div class="stat-label">Days Journey</div>
+                        </div>
+                        <div class="journey-stat">
+                            <div class="stat-number">95%</div>
+                            <div class="stat-label">Out of Market</div>
+                        </div>
+                        <div class="journey-stat">
+                            <div class="stat-number">76</div>
+                            <div class="stat-label">Total Touches</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2 style="margin-bottom: 30px; color: #495057;">Expected Campaign Performance</h2>
+                
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>Daily Budget</h3>
+                        <div class="result-value" id="dailyBudget">$167</div>
+                        <div class="result-subtitle">Per day spend</div>
+                        <div class="result-detail">Consistent daily investment for optimal reach and frequency management</div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Total Impressions</h3>
+                        <div class="result-value" id="totalImpressions">80.6K</div>
+                        <div class="result-subtitle">Total reach</div>
+                        <div class="result-detail">Based on $62 CPM for lead generation campaigns in your industry</div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Expected Clicks</h3>
+                        <div class="result-value" id="expectedClicks">338</div>
+                        <div class="result-subtitle">Website visits</div>
+                        <div class="result-detail">0.42% CTR typical for lead generation campaigns</div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Expected Leads</h3>
+                        <div class="result-value" id="expectedLeads">14</div>
+                        <div class="result-subtitle">Quality conversions</div>
+                        <div class="result-detail">Based on 4.2% conversion rate with pipeline influence factors</div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Cost Per Click</h3>
+                        <div class="result-value" id="costPerClick">$15</div>
+                        <div class="result-subtitle">Average CPC</div>
+                        <div class="result-detail">Premium positioning in competitive B2B market</div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Cost Per Lead</h3>
+                        <div class="result-value" id="costPerLead">$357</div>
+                        <div class="result-subtitle">Lead acquisition cost</div>
+                        <div class="result-detail">High-quality B2B leads with strong buying intent</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-section">
+                    <h3>Pipeline Impact & Influence</h3>
+                    <div class="pipeline-metrics">
+                        <div class="pipeline-metric">
+                            <div class="metric-value" id="mqlInfluence">48%</div>
+                            <div class="metric-label">MQL Influence</div>
+                        </div>
+                        <div class="pipeline-metric">
+                            <div class="metric-value" id="sqlInfluence">53%</div>
+                            <div class="metric-label">SQL Influence</div>
+                        </div>
+                        <div class="pipeline-metric">
+                            <div class="metric-value" id="newBizInfluence">53%</div>
+                            <div class="metric-label">New Business Influence</div>
+                        </div>
+                        <div class="pipeline-metric">
+                            <div class="metric-value" id="timeToRevenue">235</div>
+                            <div class="metric-label">Days to Revenue</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-section">
+                    <h3>Platform ROAS Comparison</h3>
+                    <div class="roas-comparison">
+                        <div class="roas-item linkedin">
+                            <div style="font-weight: 600; margin-bottom: 5px;">LinkedIn</div>
+                            <div style="font-size: 1.5em;">113% ROAS</div>
+                        </div>
+                        <div class="roas-item google">
+                            <div style="font-weight: 600; margin-bottom: 5px;">Google</div>
+                            <div style="font-size: 1.5em;">78% ROAS</div>
+                        </div>
+                        <div class="roas-item meta">
+                            <div style="font-weight: 600; margin-bottom: 5px;">Meta</div>
+                            <div style="font-size: 1.5em;">29% ROAS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Legal-approved 2025 LinkedIn Ads benchmarks
+        const benchmarks = {
+            awareness: { 
+                cpm: 57, ctr: 0.35, cvr: 1.8, cpc: 9,
+                pipeline: { mql: 29, sql: 36, newbiz: 35 }
+            },
+            leads: { 
+                cpm: 62, ctr: 0.42, cvr: 4.2, cpc: 15,
+                pipeline: { mql: 48, sql: 53, newbiz: 53 }
+            },
+            website: { 
+                cpm: 55, ctr: 0.48, cvr: 2.5, cpc: 8,
+                pipeline: { mql: 29, sql: 36, newbiz: 35 }
+            },
+            engagement: { 
+                cpm: 52, ctr: 0.65, cvr: 2.1, cpc: 7,
+                pipeline: { mql: 29, sql: 36, newbiz: 35 }
+            }
+        };
+
+        const industryMultipliers = {
+            technology: 1.0,
+            finance: 1.25,
+            healthcare: 1.15,
+            education: 0.85,
+            consulting: 1.1,
+            manufacturing: 0.9,
+            other: 1.0
+        };
+
+        const audienceSizeMultipliers = {
+            small: 1.3,
+            medium: 1.0,
+            large: 0.8
+        };
+
+        function calculateResults() {
+            const totalBudget = parseInt(document.getElementById('totalBudget').value) || 5000;
+            const campaignDuration = parseInt(document.getElementById('campaignDuration').value) || 30;
+            const campaignType = document.querySelector('input[name="campaignType"]:checked').value;
+            const targetAudience = document.getElementById('targetAudience').value;
+            const industry = document.getElementById('industry').value;
+
+            // Get benchmarks and multipliers
+            const baseBenchmarks = benchmarks[campaignType];
+            const industryMultiplier = industryMultipliers[industry];
+            const audienceMultiplier = audienceSizeMultipliers[targetAudience];
+
+            // Calculate adjusted metrics
+            const adjustedCPM = baseBenchmarks.cpm * industryMultiplier * audienceMultiplier;
+            const adjustedCTR = baseBenchmarks.ctr * (1 / audienceMultiplier);
+            const adjustedCVR = baseBenchmarks.cvr * industryMultiplier;
+            const adjustedCPC = baseBenchmarks.cpc * industryMultiplier * audienceMultiplier;
+
+            // Calculate performance metrics
+            const dailyBudget = totalBudget / campaignDuration;
+            const totalImpressions = (totalBudget / adjustedCPM) * 1000;
+            const expectedClicks = totalImpressions * (adjustedCTR / 100);
+            const expectedLeads = expectedClicks * (adjustedCVR / 100);
+            const costPerLead = totalBudget / expectedLeads;
+
+            // Update results
+            document.getElementById('dailyBudget').textContent = `$${Math.round(dailyBudget)}`;
+            document.getElementById('totalImpressions').textContent = formatNumber(totalImpressions);
+            document.getElementById('expectedClicks').textContent = Math.round(expectedClicks).toLocaleString();
+            document.getElementById('expectedLeads').textContent = Math.round(expectedLeads);
+            document.getElementById('costPerClick').textContent = `$${Math.round(adjustedCPC)}`;
+            document.getElementById('costPerLead').textContent = `$${Math.round(costPerLead)}`;
+
+            // Update pipeline influence
+            document.getElementById('mqlInfluence').textContent = `${baseBenchmarks.pipeline.mql}%`;
+            document.getElementById('sqlInfluence').textContent = `${baseBenchmarks.pipeline.sql}%`;
+            document.getElementById('newBizInfluence').textContent = `${baseBenchmarks.pipeline.newbiz}%`;
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return Math.round(num).toString();
+        }
+
+        // Event listeners
+        document.getElementById('totalBudget').addEventListener('input', calculateResults);
+        document.getElementById('campaignDuration').addEventListener('input', calculateResults);
+        document.getElementById('targetAudience').addEventListener('change', calculateResults);
+        document.getElementById('industry').addEventListener('change', calculateResults);
+        
+        document.querySelectorAll('input[name="campaignType"]').forEach(radio => {
+            radio.addEventListener('change', calculateResults);
+        });
+
+        // Initial calculation
+        calculateResults();
+    </script>
+</body>
+</html>
